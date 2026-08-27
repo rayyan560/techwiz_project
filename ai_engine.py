@@ -156,14 +156,25 @@ def analyze_media_file(
     Uploads file via Files API, polls processing status, requests structured JSON analysis,
     and automatically purges temporary file post-analysis.
     """
-    effective_api_key = api_key or os.environ.get("GEMINI_API_KEY", "AQ.Ab8RN6KVwlW51_7jrEhLBtGgEU63ar7A9KFI83SwWqm_aB5tGA")
+    # Check for API key in environment, Streamlit secrets, argument, or fallback
+    effective_api_key = api_key or os.environ.get("GEMINI_API_KEY")
+    if not effective_api_key:
+        try:
+            import streamlit as st
+            effective_api_key = st.secrets.get("GEMINI_API_KEY")
+        except Exception:
+            pass
     
     if not effective_api_key:
-        # Fallback to realistic executive demo mode if no key provided
-        time.sleep(1.5)
-        demo_res = generate_mock_analysis()
-        demo_res["alerts"] = "⚠️ DEMO MODE ACTIVE: No API key set in sidebar. Enter your GEMINI_API_KEY to analyze your actual live recordings with Gemini 2.0 Flash."
-        return demo_res
+        return {
+            "transcript": "⚠️ GEMINI API KEY MISSING: Please enter your GEMINI_API_KEY in the sidebar to process live media recordings.",
+            "summary": "### ⚠️ API Key Required\n\nPlease enter your GEMINI_API_KEY in the sidebar to analyze live media recordings with Gemini 3.6 Flash.",
+            "action_items": [],
+            "focus_score": 0,
+            "sentiment": "Missing API Key",
+            "alerts": "API Key required for live media analysis.",
+            "key_topics": []
+        }
 
     # Determine mime type if not provided
     if not mime_type:
@@ -229,11 +240,16 @@ def analyze_media_file(
             return clean_json_response(response.text)
             
         except Exception as e:
-            # If SDK fails (e.g. invalid key or network issue), return error message structured as analysis
             print(f"Error in google-genai SDK analysis: {e}")
-            mock_res = generate_mock_analysis()
-            mock_res["alerts"] = f"API Note: Used executive fallback due to API key or connection check ({str(e)[:100]})."
-            return mock_res
+            return {
+                "transcript": f"⚠️ Could not process recording with Gemini API.\n\nError details: {str(e)}",
+                "summary": f"### ⚠️ Gemini API Analysis Error\n\n**Details:** `{str(e)}`\n\nPlease check your GEMINI_API_KEY or media file.",
+                "action_items": [],
+                "focus_score": 0,
+                "sentiment": "API Error",
+                "alerts": f"Gemini API Error: {str(e)[:150]}",
+                "key_topics": []
+            }
 
     # Try legacy google.generativeai SDK fallback
     elif GENAI_LEGACY_AVAILABLE:
@@ -259,10 +275,23 @@ def analyze_media_file(
             return clean_json_response(response.text)
         except Exception as e:
             print(f"Error in legacy genai SDK analysis: {e}")
-            mock_res = generate_mock_analysis()
-            mock_res["alerts"] = f"API Note: Fallback used ({str(e)[:100]})."
-            return mock_res
+            return {
+                "transcript": f"⚠️ Could not process recording with Gemini API.\n\nError details: {str(e)}",
+                "summary": f"### ⚠️ Gemini API Analysis Error\n\n**Details:** `{str(e)}`\n\nPlease check your GEMINI_API_KEY.",
+                "action_items": [],
+                "focus_score": 0,
+                "sentiment": "API Error",
+                "alerts": f"Gemini API Error: {str(e)[:150]}",
+                "key_topics": []
+            }
             
     else:
-        # Neither SDK installed or imported, return mock demo analysis
-        return generate_mock_analysis()
+        return {
+            "transcript": "⚠️ google-genai SDK is not installed on the server environment.",
+            "summary": "### ⚠️ Missing Python Dependency\n\nPlease ensure `google-genai` package is installed in your server environment.",
+            "action_items": [],
+            "focus_score": 0,
+            "sentiment": "Dependency Error",
+            "alerts": "google-genai SDK package missing.",
+            "key_topics": []
+        }
