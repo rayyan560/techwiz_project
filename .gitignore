@@ -1,0 +1,23 @@
+# Python bytecode / cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environment & local credentials
+.env
+.venv/
+venv/
+ENV/
+env/
+
+# Temporary media files
+*.webm
+*.mp4
+*.wav
+*.mp3
+*.tmp
+
+# OS specific files
+.DS_Store
+Thumbs.db
