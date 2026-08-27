@@ -156,8 +156,7 @@ def analyze_media_file(
     Uploads file via Files API, polls processing status, requests structured JSON analysis,
     and automatically purges temporary file post-analysis.
     """
-    # Check for API key in environment or argument
-    effective_api_key = api_key or os.environ.get("GEMINI_API_KEY")
+    effective_api_key = api_key or os.environ.get("GEMINI_API_KEY", "AQ.Ab8RN6KVwlW51_7jrEhLBtGgEU63ar7A9KFI83SwWqm_aB5tGA")
     
     if not effective_api_key:
         # Fallback to realistic executive demo mode if no key provided
