@@ -156,7 +156,7 @@ def analyze_media_file(
     Uploads file via Files API, polls processing status, requests structured JSON analysis,
     and automatically purges temporary file post-analysis.
     """
-    # Check for API key in argument, environment, Streamlit secrets, or default fallback key
+    # Check for API key in argument, environment, or Streamlit secrets
     effective_api_key = api_key or os.environ.get("GEMINI_API_KEY")
     if not effective_api_key:
         try:
@@ -164,8 +164,6 @@ def analyze_media_file(
             effective_api_key = st.secrets.get("GEMINI_API_KEY")
         except Exception:
             pass
-    if not effective_api_key:
-        effective_api_key = "AQ.Ab8RN6KVwlW51_7jrEhLBtGgEU63ar7A9KFI83SwWqm_aB5tGA"
     
     if not effective_api_key:
         return {

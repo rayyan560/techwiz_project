@@ -30,9 +30,8 @@ if "analysis_results" not in st.session_state:
     st.session_state.analysis_results = None
 if "recording_active" not in st.session_state:
     st.session_state.recording_active = False
-if "api_key" not in st.session_state or not st.session_state.api_key:
-    st.session_state.api_key = os.environ.get("GEMINI_API_KEY", "AQ.Ab8RN6KVwlW51_7jrEhLBtGgEU63ar7A9KFI83SwWqm_aB5tGA")
-    os.environ["GEMINI_API_KEY"] = st.session_state.api_key
+if "api_key" not in st.session_state:
+    st.session_state.api_key = os.environ.get("GEMINI_API_KEY", "")
 if "completed_tasks" not in st.session_state:
     st.session_state.completed_tasks = set()
 if "media_file_path" not in st.session_state:
