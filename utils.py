@@ -6,6 +6,7 @@ import os
 import base64
 import tempfile
 import io
+import xml.sax.saxutils as saxutils
 from typing import Dict, Any, List
 from datetime import datetime
 
@@ -16,6 +17,15 @@ from reportlab.platypus import (
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
+
+
+def clean_xml_text(text_val: str) -> str:
+    """Sanitize text strings for safe insertion into ReportLab Paragraph flowables."""
+    if not text_val:
+        return ""
+    escaped = saxutils.escape(str(text_val))
+    escaped = escaped.replace("\n", "<br/>")
+    return escaped
 
 
 def save_uploaded_media(uploaded_file) -> str:
@@ -56,14 +66,11 @@ def generate_pdf_report(analysis_data: Dict[str, Any], session_name: str = "Exec
         bottomMargin=40
     )
     
-    # Styles
     styles = getSampleStyleSheet()
     
-    # Define custom executive palette
     CHARCOAL = colors.HexColor("#334155")
     DARK_SLATE = colors.HexColor("#1E293B")
     PLATINUM_BG = colors.HexColor("#F1F5F9")
-    ACCENT_GOLD = colors.HexColor("#78350F")
     BORDER_COLOR = colors.HexColor("#CBD5E1")
     
     title_style = ParagraphStyle(
@@ -112,13 +119,13 @@ def generate_pdf_report(analysis_data: Dict[str, Any], session_name: str = "Exec
     # Header Title Block
     story.append(Paragraph("AI OFFICE COPILOT & EXECUTIVE BRIEF", title_style))
     date_str = datetime.now().strftime("%B %d, %Y | %I:%M %p")
-    story.append(Paragraph(f"Session: {session_name} &nbsp;•&nbsp; Generated: {date_str}", subtitle_style))
+    story.append(Paragraph(f"Session: {clean_xml_text(session_name)} &nbsp;•&nbsp; Generated: {date_str}", subtitle_style))
     story.append(HRFlowable(width="100%", thickness=1.5, color=BORDER_COLOR, spaceAfter=15))
     
     # Executive Key Metrics Bar
     focus_score = analysis_data.get("focus_score", 85)
-    sentiment = analysis_data.get("sentiment", "Calm & Professional")
-    alerts = analysis_data.get("alerts", "None")
+    sentiment = clean_xml_text(str(analysis_data.get("sentiment", "Calm & Professional")))
+    alerts = clean_xml_text(str(analysis_data.get("alerts", "None")))
     
     metrics_data = [
         [
@@ -148,9 +155,10 @@ def generate_pdf_report(analysis_data: Dict[str, Any], session_name: str = "Exec
     story.append(metrics_table)
     story.append(Spacer(1, 15))
     
-    # Summary Section
+    # Executive Summary Section
     story.append(Paragraph("Executive Summary", h2_style))
-    summary_text = analysis_data.get("summary", "No summary generated.").replace("\n", "<br/>")
+    summary_raw = analysis_data.get("summary", "No summary generated.")
+    summary_text = clean_xml_text(summary_raw)
     story.append(Paragraph(summary_text, body_style))
     story.append(Spacer(1, 10))
     
@@ -168,12 +176,12 @@ def generate_pdf_report(analysis_data: Dict[str, Any], session_name: str = "Exec
         
         for item in action_items:
             if isinstance(item, dict):
-                task = item.get("task", "")
-                assignee = item.get("assignee", "Unassigned")
-                deadline = item.get("deadline", "TBD")
-                priority = item.get("priority", "Medium")
+                task = clean_xml_text(item.get("task", ""))
+                assignee = clean_xml_text(item.get("assignee", "Unassigned"))
+                deadline = clean_xml_text(item.get("deadline", "TBD"))
+                priority = clean_xml_text(item.get("priority", "Medium"))
             else:
-                task = str(item)
+                task = clean_xml_text(str(item))
                 assignee = "Executive"
                 deadline = "TBD"
                 priority = "Medium"
@@ -200,10 +208,10 @@ def generate_pdf_report(analysis_data: Dict[str, Any], session_name: str = "Exec
         story.append(Spacer(1, 15))
         
     # Spoken Transcript Section
-    transcript = analysis_data.get("transcript", "")
-    if transcript:
+    transcript_raw = analysis_data.get("transcript", "")
+    if transcript_raw:
         story.append(Paragraph("Spoken Transcript Record", h2_style))
-        formatted_transcript = transcript.replace("\n", "<br/>")
+        transcript_text = clean_xml_text(transcript_raw)
         transcript_style = ParagraphStyle(
             'ExecTranscript',
             parent=body_style,
@@ -211,7 +219,7 @@ def generate_pdf_report(analysis_data: Dict[str, Any], session_name: str = "Exec
             leading=13,
             textColor=CHARCOAL
         )
-        story.append(Paragraph(formatted_transcript, transcript_style))
+        story.append(Paragraph(transcript_text, transcript_style))
         
     # Build Document
     doc.build(story)
