@@ -242,16 +242,37 @@ def analyze_media_file(
             return clean_json_response(response.text)
             
         except Exception as e:
-            print(f"Error in google-genai SDK analysis: {e}")
-            return {
-                "transcript": f"⚠️ Could not process recording with Gemini API.\n\nError details: {str(e)}",
-                "summary": f"### ⚠️ Gemini API Analysis Error\n\n**Details:** `{str(e)}`\n\nPlease check your GEMINI_API_KEY or media file.",
-                "action_items": [],
-                "focus_score": 0,
-                "sentiment": "API Error",
-                "alerts": f"Gemini API Error: {str(e)[:150]}",
-                "key_topics": []
-            }
+            err_str = str(e)
+            print(f"Error in google-genai SDK analysis: {err_str}")
+            
+            if "401" in err_str or "UNAUTHENTICATED" in err_str or "BLOCKED" in err_str:
+                return {
+                    "transcript": "⚠️ API Key Authentication Error (401 UNAUTHENTICATED).\n\nThe provided API key is blocked or invalid for Google Gemini API.",
+                    "summary": (
+                        "### ⚠️ Invalid / Blocked Gemini API Key\n\n"
+                        "Google API returned `401 UNAUTHENTICATED / API_KEY_SERVICE_BLOCKED` for this key string.\n\n"
+                        "#### 🔑 How to get a FREE working Gemini API Key (10 Seconds):\n"
+                        "1. Open **[Google AI Studio API Keys](https://aistudio.google.com/app/apikey)**\n"
+                        "2. Click **'Create API Key'** (100% Free).\n"
+                        "3. Copy your key (it starts with `AIzaSy...`).\n"
+                        "4. Paste it in the left sidebar **Google Gemini API Key** box!"
+                    ),
+                    "action_items": [{"task": "Get free API Key from https://aistudio.google.com/app/apikey", "assignee": "User", "deadline": "Now", "priority": "High"}],
+                    "focus_score": 0,
+                    "sentiment": "Key Blocked",
+                    "alerts": "401 UNAUTHENTICATED: Please generate a free AI Studio API key starting with AIzaSy...",
+                    "key_topics": []
+                }
+            else:
+                return {
+                    "transcript": f"⚠️ Could not process recording with Gemini API.\n\nDetails: {err_str}",
+                    "summary": f"### ⚠️ Gemini API Error\n\n**Details:** `{err_str}`\n\nPlease check your GEMINI_API_KEY.",
+                    "action_items": [],
+                    "focus_score": 0,
+                    "sentiment": "API Error",
+                    "alerts": f"Gemini API Error: {err_str[:150]}",
+                    "key_topics": []
+                }
 
     # Try legacy google.generativeai SDK fallback
     elif GENAI_LEGACY_AVAILABLE:
