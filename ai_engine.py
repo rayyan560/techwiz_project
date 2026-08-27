@@ -248,20 +248,21 @@ def analyze_media_file(
             
             if "401" in err_str or "UNAUTHENTICATED" in err_str or "BLOCKED" in err_str:
                 return {
-                    "transcript": "⚠️ API Key Authentication Error (401 UNAUTHENTICATED).\n\nThe provided API key is blocked or invalid for Google Gemini API.",
+                    "transcript": "⚠️ API Key Authentication Error (401 UNAUTHENTICATED).\n\nThe provided key token has expired or is invalid for Google Gemini API.",
                     "summary": (
-                        "### ⚠️ Invalid / Blocked Gemini API Key\n\n"
-                        "Google API returned `401 UNAUTHENTICATED / API_KEY_SERVICE_BLOCKED` for this key string.\n\n"
-                        "#### 🔑 How to get a FREE working Gemini API Key (10 Seconds):\n"
+                        "### ⚠️ Expired / Invalid API Key Token\n\n"
+                        "Google API returned `401 UNAUTHENTICATED`.\n\n"
+                        "**Technical Cause:** GCP temporary access tokens (`AQ.Ab8...`) expire automatically after 60 minutes.\n\n"
+                        "#### 🔑 Permanent Fix (Never Expires):\n"
                         "1. Open **[Google AI Studio API Keys](https://aistudio.google.com/app/apikey)**\n"
                         "2. Click **'Create API Key'** (100% Free).\n"
-                        "3. Copy your key (it starts with `AIzaSy...`).\n"
+                        "3. Copy your permanent key (starts with **`AIzaSy...`**).\n"
                         "4. Paste it in the left sidebar **Google Gemini API Key** box!"
                     ),
-                    "action_items": [{"task": "Get free API Key from https://aistudio.google.com/app/apikey", "assignee": "User", "deadline": "Now", "priority": "High"}],
+                    "action_items": [{"task": "Get permanent AI Studio key (AIzaSy...) from https://aistudio.google.com/app/apikey", "assignee": "User", "deadline": "Immediate", "priority": "High"}],
                     "focus_score": 0,
-                    "sentiment": "Key Blocked",
-                    "alerts": "401 UNAUTHENTICATED: Please generate a free AI Studio API key starting with AIzaSy...",
+                    "sentiment": "Token Expired",
+                    "alerts": "401 UNAUTHENTICATED: Temporary GCP token expired. Please use permanent AI Studio key (AIzaSy...)",
                     "key_topics": []
                 }
             else:
